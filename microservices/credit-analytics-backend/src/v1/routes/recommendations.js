@@ -1,5 +1,7 @@
 import { Router } from 'express';
 import { bankApiClient, handleAxiosError } from '../../lib/bankApiClient.js';
+import { config } from '../../config/env.js';
+import { getMockLoanDetails } from '../../lib/mockData.js';
 
 const router = Router();
 
@@ -41,6 +43,23 @@ const calculateRefinanceOffer = (loan) => {
 
 router.get('/suggestions', async (req, res) => {
   try {
+    if (config.useMockData) {
+      const mockLoans = getMockLoanDetails();
+      const enrichedMockLoans = mockLoans.map((loan) => ({
+        ...loan,
+        refinance_offer: calculateRefinanceOffer(loan),
+      }));
+
+      res.json({
+        data: enrichedMockLoans,
+        meta: {
+          total: enrichedMockLoans.length,
+          source: 'mock',
+        },
+      });
+      return;
+    }
+
     const authHeader = ensureAuthToken(req);
     const client = bankApiClient(authHeader);
 

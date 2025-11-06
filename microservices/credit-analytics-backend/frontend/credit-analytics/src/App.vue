@@ -12,7 +12,7 @@
       </div>
     </header>
 
-    <section v-if="!authToken" class="state state-auth">
+    <section v-if="isAuthRequired" class="state state-auth">
       <h2>Требуется авторизация</h2>
       <p>Мы запросили токен доступа у основного приложения. Если доступ не появился, нажмите кнопку ниже.</p>
       <button class="btn btn-primary" type="button" @click="requestAuthTokenFromParent">Запросить токен ещё раз</button>
@@ -241,6 +241,7 @@ const state = reactive({
 
 const authToken = ref(null);
 const tokenRequestTimestamp = ref(0);
+const devAutoAuth = import.meta.env.DEV;
 
 const ensureBearer = (token) => {
   if (!token) {
@@ -460,6 +461,8 @@ const isLoading = computed(() => {
 
 const hasError = computed(() => Boolean(state.errorLoans || state.errorOffers));
 
+const isAuthRequired = computed(() => !devAutoAuth && !authToken.value);
+
 const formatCurrency = (value) => {
   const number = toNumber(value);
   if (number == null) {
@@ -618,6 +621,10 @@ onMounted(() => {
   const storedToken = sessionStorage.getItem('creditAnalyticsToken');
   if (storedToken) {
     authToken.value = storedToken;
+  } else if (devAutoAuth) {
+    const mockToken = 'dev-mock-token';
+    authToken.value = mockToken;
+    sessionStorage.setItem('creditAnalyticsToken', mockToken);
   } else {
     requestAuthTokenFromParent();
   }
