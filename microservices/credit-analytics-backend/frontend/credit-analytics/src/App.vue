@@ -959,6 +959,12 @@ watch(
   .refinance-widget {
     padding: 24px 16px 64px;
   }
+
+  .summary-card .summary-label {
+    font-size: clamp(0.68rem, 2.6vw, 0.82rem);
+    letter-spacing: 0.05em;
+    line-height: 1.2;
+  }
 }
 
 .btn {
