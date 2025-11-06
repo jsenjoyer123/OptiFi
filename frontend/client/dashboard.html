@@ -301,6 +301,23 @@
             color: var(--text-primary);
         }
 
+        .iframe-wrapper {
+            width: 100%;
+            border: 1px solid var(--border-color);
+            border-radius: var(--border-radius-md);
+            overflow: hidden;
+            background: var(--bg-card);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .iframe-wrapper iframe {
+            display: block;
+            width: 100%;
+            min-height: 520px;
+            border: none;
+            background: var(--bg-card);
+        }
+
         /* Buttons */
         .btn {
             padding: var(--spacing-sm) var(--spacing-lg);
@@ -843,6 +860,10 @@
                 <span class="nav-icon">📦</span>
                 <span>Продукты</span>
             </a>
+            <a href="#refinance" class="nav-item" onclick="showSection('refinance')">
+                <span class="nav-icon">🔁</span>
+                <span>Рефинансирование</span>
+            </a>
             <a href="#transfers" class="nav-item" onclick="showSection('transfers')">
                 <span class="nav-icon">💸</span>
                 <span>Переводы</span>
@@ -923,6 +944,22 @@
                 <div>У вас нет активных продуктов</div>
                 <button class="btn btn-primary" style="margin-top: var(--spacing-md);" onclick="openProductModal()">Открыть продукт</button>
             </div>
+        </section>
+
+        <!-- Refinance Section -->
+        <section class="section" id="section-refinance">
+            <div class="section-header">
+                <h2 class="section-title">🔁 Рефинансирование кредитов</h2>
+            </div>
+            <p style="color: var(--text-secondary); margin-bottom: var(--spacing-lg); max-width: 720px;">
+                Управляйте своими кредитами и отслеживайте предложения по рефинансированию в режиме реального времени.
+            </p>
+            <div class="iframe-wrapper">
+          <iframe id="refinanceFrame"
+                        src="http://localhost:5174"
+                        title="Микросервис рефинансирования"
+                        loading="lazy"></iframe>
+        </div>
         </section>
 
         <!-- Transfers Section -->
@@ -1018,6 +1055,10 @@
             <a href="#products" class="bottom-nav-item" onclick="showSection('products')">
                 <span class="bottom-nav-icon">📦</span>
                 <span>Продукты</span>
+            </a>
+            <a href="#refinance" class="bottom-nav-item" onclick="showSection('refinance')">
+                <span class="bottom-nav-icon">🔁</span>
+                <span>Рефинанс</span>
             </a>
             <a href="#transfers" class="bottom-nav-item" onclick="showSection('transfers')">
                 <span class="bottom-nav-icon">💸</span>
