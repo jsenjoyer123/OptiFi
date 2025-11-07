@@ -945,7 +945,7 @@
         <!-- Refinance Section -->
         <section class="section" id="section-refinance">
             <iframe id="refinanceFrame"
-                    src="http://localhost:5174"
+                    src=""
                     title="Микросервис рефинансирования"
                     loading="lazy"></iframe>
         </section>
@@ -1203,7 +1203,40 @@
     </script>
     <script>
         // Auth check
-        const token = localStorage.getItem('access_token');
+        const sanitizeToken = (value) => {
+            if (typeof value !== 'string') {
+                return null;
+            }
+            return value.replace(/[\u0000-\u001F\u007F-\uFFFF]/g, '').trim();
+        };
+
+        let token = null;
+        let sessionToken = null;
+        try {
+            token = sanitizeToken(localStorage.getItem('access_token'));
+        } catch (error) {
+            console.warn('[dashboard] Failed to read token from localStorage', error);
+        }
+
+        try {
+            sessionToken = sanitizeToken(sessionStorage.getItem('creditAnalyticsToken'));
+        } catch (error) {
+            console.warn('[dashboard] Failed to read token from sessionStorage', error);
+        }
+
+        if (sessionToken && sessionToken !== token) {
+            token = sanitizeToken(sessionToken);
+            try {
+                localStorage.setItem('access_token', token);
+            } catch (error) {
+                console.warn('[dashboard] Failed to persist token in localStorage', error);
+            }
+        }
+
+        if (!token) {
+            token = sanitizeToken(sessionToken);
+        }
+
         const clientId = localStorage.getItem('client_id');
         const bankCode = localStorage.getItem('bank_code') || 'vbank';
 
@@ -1223,6 +1256,7 @@
         const MOBILE_BREAKPOINT = 768;
         const DEFAULT_DESKTOP_HEIGHT = 520;
         const refinanceFrame = document.getElementById('refinanceFrame');
+        const REFINANCE_TOKEN_STORAGE_KEY = 'creditAnalyticsToken';
         let lastRefinanceHeight = 0;
 
         const isMobileViewport = () => window.innerWidth <= MOBILE_BREAKPOINT;
@@ -1324,7 +1358,48 @@
             );
         };
 
+        const initRefinanceFrameSrc = () => {
+            if (!refinanceFrame) {
+                return;
+            }
+
+            if (!token) {
+                const storedToken = sessionStorage.getItem(REFINANCE_TOKEN_STORAGE_KEY);
+                if (storedToken) {
+                    refinanceFrame.dataset.token = storedToken;
+                }
+            }
+
+            let storedToken = null;
+            try {
+                storedToken = sessionStorage.getItem(REFINANCE_TOKEN_STORAGE_KEY);
+            } catch (error) {
+                console.warn('[dashboard] Failed to read stored refinance token', error);
+            }
+
+            const candidates = [refinanceFrame.dataset.token, storedToken, sessionToken, token];
+            const effectiveToken = candidates.find((candidate) => typeof candidate === 'string' && candidate.trim().length);
+
+            if (effectiveToken) {
+                sessionStorage.setItem(REFINANCE_TOKEN_STORAGE_KEY, effectiveToken);
+                if (effectiveToken !== token) {
+                    token = effectiveToken;
+                    try {
+                        localStorage.setItem('access_token', token);
+                    } catch (error) {
+                        console.warn('[dashboard] Failed to sync token to localStorage', error);
+                    }
+                }
+                const widgetUrl = new URL('http://localhost:5174/');
+                widgetUrl.searchParams.set('authToken', effectiveToken);
+                refinanceFrame.src = widgetUrl.toString();
+            } else {
+                refinanceFrame.src = 'http://localhost:5174/';
+            }
+        };
+
         if (refinanceFrame) {
+            initRefinanceFrameSrc();
             refinanceFrame.addEventListener('load', () => {
                 refinanceWidgetOrigin = resolveRefinanceOrigin();
                 sendAuthTokenToRefinanceWidget();

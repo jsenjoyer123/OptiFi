@@ -91,6 +91,7 @@ const state = reactive({
 const authToken = ref(null);
 const tokenRequestTimestamp = ref(0);
 const devAutoAuth = import.meta.env.DEV;
+const devAuthToken = import.meta.env.VITE_DEV_AUTH_TOKEN;
 const rootEl = ref(null);
 const lastSentHeight = ref(0);
 let resizeObserver = null;
@@ -101,12 +102,85 @@ const setLoansTrack = (element) => {
 const currentSlide = ref(0);
 const isMobile = ref(false);
 let trackScrollHandler = null;
+const TOKEN_STORAGE_KEY = 'creditAnalyticsToken';
 
 const ensureBearer = (token) => {
   if (!token) {
     return '';
   }
   return token.startsWith('Bearer') ? token : `Bearer ${token}`;
+};
+
+const normalizeToken = (value) => {
+  if (!value || typeof value !== 'string') {
+    return null;
+  }
+  const trimmed = value.trim();
+  return trimmed.length ? trimmed : null;
+};
+
+const readTokenFromQuery = () => {
+  try {
+    const params = new URLSearchParams(window.location.search);
+    const token =
+      params.get('token') || params.get('authToken') || params.get('access_token');
+    return normalizeToken(token);
+  } catch (error) {
+    console.warn('[credit-analytics] Failed to read token from query', error);
+    return null;
+  }
+};
+
+const readTokenFromGlobal = () => {
+  const globalValue =
+    typeof window !== 'undefined' ? window.__CREDIT_ANALYTICS_TOKEN__ : undefined;
+  return normalizeToken(globalValue);
+};
+
+const readTokenFromStorage = () => {
+  if (typeof window === 'undefined') {
+    return null;
+  }
+  try {
+    const stored = window.sessionStorage.getItem(TOKEN_STORAGE_KEY);
+    return normalizeToken(stored);
+  } catch (error) {
+    console.warn('[credit-analytics] Failed to read token from storage', error);
+    return null;
+  }
+};
+
+const persistToken = (token) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.sessionStorage.setItem(TOKEN_STORAGE_KEY, token);
+  } catch (error) {
+    console.warn('[credit-analytics] Failed to persist token', error);
+  }
+};
+
+const clearPersistedToken = () => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+  try {
+    window.sessionStorage.removeItem(TOKEN_STORAGE_KEY);
+  } catch (error) {
+    console.warn('[credit-analytics] Failed to clear persisted token', error);
+  }
+};
+
+const applyAuthToken = (token, { persist = true } = {}) => {
+  const normalized = normalizeToken(token);
+  if (!normalized) {
+    return;
+  }
+  authToken.value = normalized;
+  if (persist) {
+    persistToken(normalized);
+  }
 };
 
 const clampIndex = (index) => {
@@ -668,9 +742,7 @@ const handleMessage = (event) => {
   }
 
   if (data.type === 'AUTH_TOKEN_RESPONSE' && data.payload?.token) {
-    const token = data.payload.token;
-    authToken.value = token;
-    sessionStorage.setItem('creditAnalyticsToken', token);
+    applyAuthToken(data.payload.token);
   }
 
   if (data.type === 'REFRESH_REFINANCE_WIDGET') {
@@ -696,13 +768,21 @@ onMounted(() => {
   window.addEventListener('orientationchange', handleViewportChange);
   scheduleHeightUpdate();
 
-  const storedToken = sessionStorage.getItem('creditAnalyticsToken');
-  if (storedToken) {
-    authToken.value = storedToken;
+  const queryToken = readTokenFromQuery();
+  const globalToken = queryToken ? null : readTokenFromGlobal();
+  const storedToken = queryToken || globalToken ? null : readTokenFromStorage();
+  const devToken = normalizeToken(devAuthToken);
+
+  if (queryToken) {
+    applyAuthToken(queryToken);
+  } else if (globalToken) {
+    applyAuthToken(globalToken);
+  } else if (storedToken) {
+    applyAuthToken(storedToken, { persist: false });
+  } else if (devToken) {
+    applyAuthToken(devToken, { persist: Boolean(devAutoAuth) });
   } else if (devAutoAuth) {
-    const mockToken = 'dev-mock-token';
-    authToken.value = mockToken;
-    sessionStorage.setItem('creditAnalyticsToken', mockToken);
+    applyAuthToken('dev-mock-token');
   } else {
     requestAuthTokenFromParent();
   }

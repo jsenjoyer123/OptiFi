@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { bankApiClient, handleAxiosError } from '../../lib/bankApiClient.js';
 import { config } from '../../config/env.js';
 import { getMockLoanDetails } from '../../lib/mockData.js';
+import { fetchExternalLoans } from '../../lib/externalLoansService.js';
 
 const router = Router();
 
@@ -26,9 +27,14 @@ router.get('/active', async (req, res, next) => {
     const authHeader = ensureAuthToken(req);
     const client = bankApiClient(authHeader);
 
-    const [agreementsResponse, accountsResponse] = await Promise.all([
+    const [agreementsResponse, accountsResponse, externalLoans] = await Promise.all([
       client.get('/product-agreements'),
       client.get('/accounts'),
+      fetchExternalLoans().catch((error) => {
+        // eslint-disable-next-line no-console
+        console.warn('[loans] Failed to fetch external loans', error);
+        return [];
+      }),
     ]);
 
     const agreements = agreementsResponse.data?.data ?? [];
@@ -43,9 +49,11 @@ router.get('/active', async (req, res, next) => {
       return acc;
     }, {});
 
-    const loanAgreements = agreements.filter((agreement) => agreement.product_type === 'loan');
+    const loanAgreements = agreements
+      .filter((agreement) => agreement.product_type === 'loan')
+      .map((agreement) => ({ ...agreement, source: 'internal' }));
 
-    const detailedLoans = await Promise.all(
+    const enrichedInternalLoans = await Promise.all(
       loanAgreements.map(async (agreement) => {
         const accountNumber = agreement.account_number;
         const accountId = accountNumber ? accountIdByNumber[accountNumber] : undefined;
@@ -82,7 +90,15 @@ router.get('/active', async (req, res, next) => {
       })
     );
 
-    res.json({ data: detailedLoans, meta: { total: detailedLoans.length } });
+    const combinedLoans = [...enrichedInternalLoans, ...externalLoans];
+
+    res.json({
+      data: combinedLoans,
+      meta: {
+        total: combinedLoans.length,
+        external_sources: Array.isArray(externalLoans) ? externalLoans.length : 0,
+      },
+    });
   } catch (error) {
     if (error.status) {
       res.status(error.status).json({ error: error.message });

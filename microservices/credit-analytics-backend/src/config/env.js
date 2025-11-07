@@ -17,9 +17,53 @@ requiredEnv.forEach((key) => {
   }
 });
 
+const parseNumber = (value, fallback) => {
+  if (value == null) {
+    return fallback;
+  }
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const buildExternalBankConfig = () => {
+  const bankEntries = [
+    {
+      code: 'vbank',
+      displayName: 'Virtual Bank',
+      baseUrl: process.env.VBANK_API_BASE,
+      consentId: process.env.VBANK_PRODUCT_AGREEMENT_CONSENT_ID,
+    },
+    {
+      code: 'abank',
+      displayName: 'Awesome Bank',
+      baseUrl: process.env.ABANK_API_BASE,
+      consentId: process.env.ABANK_PRODUCT_AGREEMENT_CONSENT_ID,
+    },
+    {
+      code: 'sbank',
+      displayName: 'Smart Bank',
+      baseUrl: process.env.SBANK_API_BASE,
+      consentId: process.env.SBANK_PRODUCT_AGREEMENT_CONSENT_ID,
+    },
+  ];
+
+  return bankEntries
+    .filter((bank) => bank.baseUrl && bank.consentId)
+    .map((bank) => ({
+      ...bank,
+      baseUrl: bank.baseUrl.trim(),
+      consentId: bank.consentId.trim(),
+    }));
+};
+
 export const config = {
   port: Number(process.env.PORT ?? 8100),
   bankApiBaseUrl: process.env.BANK_API_BASE_URL ?? 'http://localhost:8080',
   bankApiTimeoutMs: Number(process.env.BANK_API_TIMEOUT_MS ?? 10000),
   useMockData: process.env.USE_MOCK_DATA === 'true',
+  teamClientId: process.env.TEAM_CLIENT_ID ?? null,
+  teamClientSecret: process.env.TEAM_CLIENT_SECRET ?? null,
+  externalClientId: process.env.EXTERNAL_CLIENT_ID ?? null,
+  externalBankTimeoutMs: parseNumber(process.env.EXTERNAL_BANK_TIMEOUT_MS, Number(process.env.BANK_API_TIMEOUT_MS ?? 10000)),
+  externalBanks: buildExternalBankConfig(),
 };
