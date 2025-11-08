@@ -226,7 +226,7 @@ router.get('/suggestions', async (req, res) => {
 
     const [agreementsResponse, productsResponse, externalLoansRaw] = await Promise.all([
       client.get('/product-agreements'),
-      client.get('/products', { params: { product_type: 'loan' } }),
+      client.get('/products'),
       fetchExternalLoans().catch((error) => {
         // eslint-disable-next-line no-console
         console.warn('[refinance] Failed to fetch external loans', error);

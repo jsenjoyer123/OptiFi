@@ -70,4 +70,5 @@ export const config = {
   externalClientId: process.env.EXTERNAL_CLIENT_ID ?? null,
   externalBankTimeoutMs: parseNumber(process.env.EXTERNAL_BANK_TIMEOUT_MS, Number(process.env.BANK_API_TIMEOUT_MS ?? 10000)),
   externalBanks: buildExternalBankConfig(),
+  localProductCatalogBaseUrl: process.env.LOCAL_PRODUCT_CATALOG_BASE_URL ?? 'http://localhost:8080',
 };
