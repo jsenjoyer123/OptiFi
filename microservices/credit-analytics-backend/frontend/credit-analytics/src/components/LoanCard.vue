@@ -19,7 +19,6 @@
         <div class="detail">
           <span class="label">Остаток долга</span>
           <span class="value">{{ formatCurrency(loan.outstandingBalance) }}</span>
-          <span v-if="loan.balanceError" class="hint error">{{ loan.balanceError }}</span>
         </div>
         <div class="detail">
           <span class="label">Текущая ставка</span>
