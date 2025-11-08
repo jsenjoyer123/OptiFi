@@ -231,6 +231,7 @@
     <main class="main-content">
         <div class="top-bar">
             <div class="top-bar-title">Управление продуктами</div>
+            <button class="btn btn-primary" id="openCreateModal">+ Добавить продукт</button>
         </div>
 
         <div class="content-area">
@@ -281,6 +282,58 @@
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Отмена</button>
                     <button type="submit" class="btn btn-primary">Сохранить</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Create Modal -->
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Новый продукт</h2>
+            </div>
+            <form id="createForm">
+                <div class="form-group">
+                    <label class="form-label" for="createType">Тип продукта</label>
+                    <select class="form-input" id="createType" required>
+                        <option value="LOAN">Кредит</option>
+                        <option value="DEPOSIT">Депозит</option>
+                        <option value="CARD">Карта</option>
+                        <option value="ACCOUNT">Счёт</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="createName">Название</label>
+                    <input type="text" class="form-input" id="createName" placeholder="Например, Суперкредит 5%" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="createRate">Процентная ставка (%)</label>
+                    <input type="number" class="form-input" id="createRate" step="0.01" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="createMinAmount">Мин. сумма (₽)</label>
+                    <input type="number" class="form-input" id="createMinAmount" step="1000" min="0" required>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="createMaxAmount">Макс. сумма (₽)</label>
+                    <input type="number" class="form-input" id="createMaxAmount" step="1000" min="0">
+                </div>
+
+                <div class="form-group">
+                    <label class="form-checkbox">
+                        <input type="checkbox" id="createIsActive" checked>
+                        <span>Продукт активен</span>
+                    </label>
+                </div>
+
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Отмена</button>
+                    <button type="submit" class="btn btn-primary">Создать</button>
                 </div>
             </form>
         </div>
@@ -451,6 +504,62 @@
 
                 closeEditModal();
                 loadProducts();
+            } catch (error) {
+                alert('Ошибка: ' + error.message);
+            }
+        });
+
+        // Create product modal helpers
+        const createModal = document.getElementById('createModal');
+        const createForm = document.getElementById('createForm');
+        document.getElementById('openCreateModal').addEventListener('click', () => {
+            createForm.reset();
+            document.getElementById('createIsActive').checked = true;
+            createModal.classList.add('active');
+        });
+
+        window.closeCreateModal = function() {
+            createModal.classList.remove('active');
+        };
+
+        createForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const productType = document.getElementById('createType').value.trim();
+            const name = document.getElementById('createName').value.trim();
+            const rate = document.getElementById('createRate').value;
+            const minAmount = document.getElementById('createMinAmount').value;
+            const maxAmount = document.getElementById('createMaxAmount').value;
+            const isActive = document.getElementById('createIsActive').checked;
+
+            try {
+                const baseUrl = getBaseUrl();
+                const url = new URL(`${baseUrl}/banker/products`);
+                url.searchParams.append('product_type', productType);
+                url.searchParams.append('name', name);
+                url.searchParams.append('interest_rate', rate);
+                url.searchParams.append('min_amount', minAmount);
+                if (maxAmount) {
+                    url.searchParams.append('max_amount', maxAmount);
+                }
+                if (!isActive) {
+                    url.searchParams.append('is_active', 'false');
+                }
+
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                });
+
+                if (!response.ok) {
+                    const detail = await response.text();
+                    throw new Error(detail || 'Ошибка создания продукта');
+                }
+
+                closeCreateModal();
+                await loadProducts();
             } catch (error) {
                 alert('Ошибка: ' + error.message);
             }
