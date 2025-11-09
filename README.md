@@ -17,23 +17,6 @@
 
 ## 🧩 Архитектура
 
-```mermaid
-flowchart LR
-    ParentApp[Основное приложение банка]
-    Widget[Credit Analytics Widget (iframe)]
-    Backend[Credit Analytics Backend (Express)]
-    BankAPI[Bank-in-a-Box API]
-    ExternalBanks[Внешние банки (OpenBanking API)]
-
-    ParentApp -->|postMessage токен| Widget
-    Widget -->|REST /api/...| Backend
-    Backend -->|Proxy| BankAPI
-    Backend -->|OAuth2 sandbox| ExternalBanks
-    ExternalBanks -->|Счета и договоры| Backend
-    BankAPI -->|Каталог продуктов, agreements| Backend
-    Backend -->|Агрегированные данные| Widget
-    Widget -->|UI события| ParentApp
-```
 
 * __Express сервер__ — применяет `helmet`, `cors`, `morgan`, парсеры JSON/URL-encoded, раздаёт `dist/`.
 * __Конфигурация__ — `src/config/env.js` валидирует `.env`, собирает список внешних банков и тайм-ауты.
