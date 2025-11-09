@@ -103,7 +103,7 @@
           :format-currency="formatCurrency"
           :format-percent="formatPercent"
           :format-term="formatTerm"
-          :allow-multi-select="!isMobile"
+          :allow-multi-select="state.multiSelectMode && !isMobile"
           :multi-selected-ids="state.multiSelectedLoanIds"
           @retry="handleRefreshRequest"
           @select-loan="selectLoan"
@@ -814,6 +814,94 @@ const externalLoans = computed(() => {
   return loansWithOffers.value.filter((loan) => isExternalLoan(loan));
 });
 
+const multiSelectedLoans = computed(() => {
+  if (!state.multiSelectedLoanIds.length) {
+    return [];
+  }
+
+  return externalLoans.value.filter((loan) =>
+    state.multiSelectedLoanIds.includes(loan.agreement_id)
+  );
+});
+
+const sumSelectedBalances = computed(() => {
+  if (!multiSelectedLoans.value.length) {
+    return 0;
+  }
+
+  return multiSelectedLoans.value.reduce((total, loan) => {
+    const balance = loan.outstandingBalance ?? 0;
+    return total + (Number.isFinite(balance) ? balance : 0);
+  }, 0);
+});
+
+const enableMultiSelect = () => {
+  if (isMobile.value || state.multiSelectMode) {
+    return;
+  }
+
+  state.multiSelectMode = true;
+  state.multiSubmissionResult = null;
+
+  if (
+    state.selectedLoanId &&
+    !state.multiSelectedLoanIds.includes(state.selectedLoanId)
+  ) {
+    state.multiSelectedLoanIds.push(state.selectedLoanId);
+  }
+
+  scheduleHeightUpdate();
+};
+
+const toggleMultiSelection = (agreementId) => {
+  if (!state.multiSelectMode) {
+    return;
+  }
+
+  const index = state.multiSelectedLoanIds.indexOf(agreementId);
+  if (index === -1) {
+    state.multiSelectedLoanIds.push(agreementId);
+  } else {
+    state.multiSelectedLoanIds.splice(index, 1);
+  }
+
+  state.multiSubmissionResult = null;
+  scheduleHeightUpdate();
+};
+
+const clearMultiSelection = () => {
+  state.multiSelectedLoanIds = [];
+  state.isMultiSubmitting = false;
+  state.multiSubmissionResult = null;
+  scheduleHeightUpdate();
+};
+
+const openBulkRefinance = async () => {
+  if (state.isMultiSubmitting || state.multiSelectedLoanIds.length < 2) {
+    return;
+  }
+
+  state.isMultiSubmitting = true;
+  state.multiSubmissionResult = null;
+
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    state.multiSubmissionResult = {
+      status: 'success',
+      message: 'Формирование пакетной заявки пока недоступно в демо-режиме.',
+    };
+  } catch (error) {
+    console.error('[credit-analytics] Bulk refinance submission failed', error);
+    state.multiSubmissionResult = {
+      status: 'error',
+      message: 'Не удалось сформировать пакетную заявку. Попробуйте позже.',
+    };
+  } finally {
+    state.isMultiSubmitting = false;
+    scheduleHeightUpdate();
+  }
+};
+
 const selectedLoan = computed(() => {
   return externalLoans.value.find((loan) => loan.agreement_id === state.selectedLoanId) || null;
 });
@@ -1220,6 +1308,15 @@ watch(externalLoans, (items) => {
     currentSlide.value = clampIndex(selectedIndex);
   }
 
+  state.multiSelectedLoanIds = state.multiSelectedLoanIds.filter((id) =>
+    items.some((loan) => loan.agreement_id === id)
+  );
+
+  if (state.multiSelectMode && items.length <= 1) {
+    state.multiSelectMode = false;
+    state.multiSelectedLoanIds = [];
+  }
+
   if (isMobile.value) {
     nextTick(() => {
       attachTrackScroll();
@@ -1268,6 +1365,8 @@ watch(currentSlide, () => {
 
 watch(isMobile, (mobile) => {
   if (mobile) {
+    state.multiSelectMode = false;
+    state.multiSelectedLoanIds = [];
     nextTick(() => {
       attachTrackScroll();
       scrollToSlide(currentSlide.value);

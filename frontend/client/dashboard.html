@@ -1271,23 +1271,23 @@
 
     <section id="refinanceGlobalModal" class="refinance-modal hidden" role="dialog" aria-modal="true" aria-labelledby="refinanceModalTitle">
         <div class="refinance-modal__backdrop" data-action="close"></div>
-        <div class="refinance-modal__container">
+        <div class="refinance-modal__container" data-refinance-container>
             <button class="refinance-modal__close" type="button" title="Закрыть" data-action="close">×</button>
             <header class="refinance-modal__header">
                 <h2 id="refinanceModalTitle">Заявка на рефинансирование</h2>
                 <p class="refinance-modal__subtitle" id="refinanceModalSubtitle"></p>
             </header>
 
-            <div id="refinanceModalSubmitting" class="refinance-modal__submitting hidden">
+            <div id="refinanceModalSubmitting" class="refinance-modal__submitting hidden" role="status" aria-live="assertive">
                 <div class="refinance-modal__spinner"></div>
                 <p>Отправляем заявку...</p>
             </div>
 
-            <div id="refinanceModalOverlay" class="refinance-modal__overlay hidden">
+            <div id="refinanceModalOverlay" class="refinance-modal__overlay hidden" aria-hidden="true">
                 <div class="refinance-modal__overlay-spinner"></div>
             </div>
 
-            <div class="refinance-modal__content">
+            <div class="refinance-modal__content" data-refinance-content>
                 <section class="refinance-modal__panel">
                     <h3>Текущие условия</h3>
                     <dl class="refinance-modal__list" id="refinanceCurrentTerms"></dl>
@@ -1314,7 +1314,7 @@
                 <div id="refinanceModalError" class="refinance-modal__alert hidden"></div>
 
                 <div class="refinance-modal__actions">
-                    <button type="submit" class="btn btn-primary" id="refinanceModalSubmit">
+                    <button type="submit" class="btn btn-primary" id="refinanceModalSubmit" data-refinance-submit>
                         Отправить заявку
                     </button>
                 </div>

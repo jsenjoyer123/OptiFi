@@ -1,5 +1,12 @@
 <template>
-  <div v-if="isOpen" class="modal-backdrop" @click.self="emitClose">
+  <div v-if="isSubmitting" class="submission-backdrop" role="status" aria-live="assertive">
+    <div class="submission-backdrop__content">
+      <div class="submission-backdrop__spinner" aria-hidden="true"></div>
+      <p class="submission-backdrop__text">Отправляем заявку...</p>
+    </div>
+  </div>
+
+  <div v-else-if="isOpen" class="modal-backdrop" @click.self="emitClose">
     <div class="modal">
       <header class="modal-header">
         <div>
@@ -146,3 +153,46 @@ const commentModel = computed({
 const emitClose = () => emit('close');
 const emitSubmit = () => emit('submit');
 </script>
+
+<style scoped>
+.submission-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 2147483647;
+  background: rgba(10, 14, 40, 0.75);
+  backdrop-filter: blur(10px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.submission-backdrop__content {
+  display: grid;
+  gap: 16px;
+  justify-items: center;
+  text-align: center;
+  color: #ffffff;
+}
+
+.submission-backdrop__spinner {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  border: 6px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  animation: submission-backdrop-spin 0.9s linear infinite;
+}
+
+.submission-backdrop__text {
+  font-size: 1.05rem;
+  font-weight: 500;
+  letter-spacing: 0.03em;
+}
+
+@keyframes submission-backdrop-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+</style>
