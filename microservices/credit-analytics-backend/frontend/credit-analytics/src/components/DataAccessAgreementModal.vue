@@ -105,17 +105,25 @@ const handleBackdropClick = () => {
 </script>
 
 <style scoped>
+.modal-backdrop {
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 .modal--agreement {
   width: min(640px, 100%);
   display: flex;
   flex-direction: column;
   gap: 24px;
+  max-height: min(90vh, 640px);
+  overflow-y: auto;
+  padding: 28px;
 }
 
 .modal-subtitle {
   margin-top: 6px;
   color: #5d6c82;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
 }
 
 .agreement-body {
@@ -164,5 +172,62 @@ const handleBackdropClick = () => {
   display: flex;
   justify-content: flex-end;
   gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .modal-backdrop {
+    align-items: flex-start;
+    padding: 12px;
+  }
+
+  .modal--agreement {
+    width: 100%;
+    margin: 16px auto;
+    border-radius: 16px;
+    box-shadow: 0 14px 28px rgba(22, 36, 94, 0.22);
+    padding: 18px 16px;
+    gap: 14px;
+    max-height: calc(100vh - 32px);
+  }
+
+  .modal-header h2 {
+    font-size: 1.05rem;
+    line-height: 1.3;
+  }
+
+  .modal-subtitle {
+    font-size: 0.8rem;
+    line-height: 1.35;
+  }
+
+  .modal-header {
+    gap: 10px;
+  }
+
+  .agreement-body {
+    gap: 12px;
+  }
+
+  .agreement-section h3 {
+    font-size: 0.95rem;
+  }
+
+  .agreement-section p,
+  .agreement-list,
+  .agreement-checkbox {
+    font-size: 0.85rem;
+    line-height: 1.4;
+  }
+
+  .modal-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .modal-actions .btn {
+    width: 100%;
+    padding: 10px 12px;
+  }
 }
 </style>
