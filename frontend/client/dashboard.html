@@ -397,8 +397,7 @@
             gap: 24px;
             box-shadow: 0 30px 80px rgba(15, 23, 42, 0.25);
             border: 1px solid rgba(255, 255, 255, 0.1);
-            overflow-y: auto;
-            overflow-x: hidden;
+            overflow: hidden;
         }
 
         .refinance-modal__close {
@@ -438,6 +437,10 @@
             gap: 20px;
             position: relative;
             z-index: 1;
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
         }
 
         .refinance-modal__panel {
