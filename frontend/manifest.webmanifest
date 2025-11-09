@@ -1,0 +1,96 @@
+{
+  "name": "OptiFi Omnichannel Banking",
+  "short_name": "OptiFi",
+  "description": "Единое банковское приложение OptiFi для клиентов, банкиров и разработчиков.",
+  "lang": "ru-RU",
+  "dir": "ltr",
+  "start_url": "client/dashboard.html",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "any",
+  "categories": ["finance", "productivity", "business"],
+  "theme_color": "#667eea",
+  "background_color": "#f5f7fa",
+  "icons": [
+    {
+      "src": "assets/icons/icon-72.png",
+      "sizes": "72x72",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-96.png",
+      "sizes": "96x96",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-128.png",
+      "sizes": "128x128",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-256.png",
+      "sizes": "256x256",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-384.png",
+      "sizes": "384x384",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Личный кабинет",
+      "short_name": "Клиент",
+      "description": "Открыть клиентский дашборд",
+      "url": "client/dashboard.html#overview",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Панель банкира",
+      "short_name": "Банкир",
+      "description": "Перейти в портал банкира",
+      "url": "banker/index.html",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Песочница API",
+      "short_name": "API",
+      "description": "Разработческая песочница и документация",
+      "url": "developer.html",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/dashboard-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "assets/screenshots/dashboard-mobile.png",
+      "sizes": "720x1280",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ]
+}

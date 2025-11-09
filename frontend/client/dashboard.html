@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#667eea">
     <title>Личный кабинет</title>
     <link rel="stylesheet" href="theme-styles.css">
+    <link rel="manifest" href="../manifest.webmanifest">
     <style>
         * {
             margin: 0;
@@ -2010,7 +2012,7 @@
             if (effectiveToken) {
                 sessionStorage.setItem(REFINANCE_TOKEN_STORAGE_KEY, effectiveToken);
                 if (effectiveToken !== token) {
-                    token = effectiveToken;
+                    token = sanitizeToken(effectiveToken);
                     try {
                         localStorage.setItem('access_token', token);
                     } catch (error) {
@@ -3118,7 +3120,7 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
                         client_id: workingClientId
                     })
                 });
-                
+
                 if (!accountsResponse.ok) {
                     const errorData = await accountsResponse.json();
                     
@@ -3174,7 +3176,7 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
                                     <div style="font-size: 12px; color: var(--text-muted);">${account.account[0].identification}</div>
                                     <div style="font-size: 11px; color: var(--text-secondary);">${account.accountSubType}</div>
                                 </div>
-                                <div style="font-size: 18px; font-weight: 600; color: var(--success-color);">
+                                <div style="font-size: 18px; font-weight: 700; color: var(--success-color);">
                                     ${balance.toLocaleString('ru-RU')} ₽
                                 </div>
                             </div>
@@ -3513,6 +3515,7 @@ ${agr.end_date ? `📅 Дата закрытия: ${new Date(agr.end_date).toLoc
             await loadAccounts();
             await loadProductAgreements();
             await loadAllTransactions();
+            await initNotifications();
         }
         
         initDashboard();
