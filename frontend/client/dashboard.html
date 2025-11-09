@@ -2000,11 +2000,14 @@
                         console.warn('[dashboard] Failed to sync token to localStorage', error);
                     }
                 }
-                const widgetUrl = new URL('http://localhost:5174/');
+                const widgetUrl = new URL('/', window.location.origin);
+                widgetUrl.port = '5174';
                 widgetUrl.searchParams.set('authToken', effectiveToken);
                 refinanceFrame.src = widgetUrl.toString();
             } else {
-                refinanceFrame.src = 'http://localhost:5174/';
+                const widgetUrl = new URL('/', window.location.origin);
+                widgetUrl.port = '5174';
+                refinanceFrame.src = widgetUrl.toString();
             }
         };
 
