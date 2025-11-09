@@ -1472,33 +1472,18 @@ watch(
 
 @media (min-width: 768px) {
   .credits-section {
-    overflow: hidden;
+    overflow: visible;
   }
 
   .credits-section .loans-section {
-    max-height: clamp(320px, 60vh, 580px);
-    overflow: hidden;
+    max-height: none;
+    overflow: visible;
   }
 
   .credits-section .loans-grid {
-    max-height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 6px;
-    scrollbar-gutter: stable both-edges;
-  }
-
-  .credits-section .loans-grid::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .credits-section .loans-grid::-webkit-scrollbar-thumb {
-    background: rgba(74, 91, 255, 0.35);
-    border-radius: 999px;
-  }
-
-  .credits-section .loans-grid::-webkit-scrollbar-track {
-    background: transparent;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 }
 

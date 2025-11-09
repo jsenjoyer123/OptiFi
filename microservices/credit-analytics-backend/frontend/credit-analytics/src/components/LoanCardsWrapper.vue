@@ -224,33 +224,13 @@ void emit;
 
 @media (min-width: 768px) {
   .loans-section {
-    overflow: hidden;
+    overflow: visible;
   }
 
   .loans-section .loans-grid {
-    max-height: clamp(320px, 60vh, 580px);
-    overflow: hidden;
-  }
-
-  .loans-section .loans-grid {
-    max-height: 100%;
-    overflow-y: auto;
-    overflow-x: hidden;
-    padding-right: 6px;
-    scrollbar-gutter: stable both-edges;
-  }
-
-  .loans-section .loans-grid::-webkit-scrollbar {
-    width: 6px;
-  }
-
-  .loans-section .loans-grid::-webkit-scrollbar-thumb {
-    background: rgba(74, 91, 255, 0.35);
-    border-radius: 999px;
-  }
-
-  .loans-section .loans-grid::-webkit-scrollbar-track {
-    background: transparent;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 }
 
