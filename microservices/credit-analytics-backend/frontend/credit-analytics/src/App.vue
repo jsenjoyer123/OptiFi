@@ -181,6 +181,8 @@ const state = reactive({
   multiSubmissionResult: null,
 });
 
+const MIN_SUBMISSION_SPINNER_MS = 600;
+
 const authToken = ref(null);
 const tokenRequestTimestamp = ref(0);
 const devAutoAuth = import.meta.env.DEV;
@@ -1125,6 +1127,10 @@ const submitApplication = async (options = {}) => {
 
   state.isSubmitting = true;
   state.submissionError = null;
+  const submissionStartedAt =
+    typeof performance !== 'undefined' && typeof performance.now === 'function'
+      ? performance.now()
+      : Date.now();
 
   if (triggeredByParent) {
     sendToParent('REFINANCE_APPLICATION_RESULT', {
@@ -1185,6 +1191,14 @@ const submitApplication = async (options = {}) => {
       submissionOutcome.errorMessage = state.submissionError;
     }
   } finally {
+    const endedAt =
+      typeof performance !== 'undefined' && typeof performance.now === 'function'
+        ? performance.now()
+        : Date.now();
+    const elapsed = endedAt - submissionStartedAt;
+    if (elapsed < MIN_SUBMISSION_SPINNER_MS) {
+      await new Promise((resolve) => setTimeout(resolve, MIN_SUBMISSION_SPINNER_MS - elapsed));
+    }
     state.isSubmitting = false;
     scheduleHeightUpdate();
   }

@@ -1,26 +1,36 @@
 <style>
   @page{size:1920px 1080px;margin:0}
-  html,body{margin:0;height:100%;background:linear-gradient(135deg,#002d7e 0%,#0066ff 40%,#00c6ff 100%);background-size:cover;background-attachment:fixed;color:#fff;font-family:Roboto,Helvetica,Arial,sans-serif}
-  section{width:1920px;height:1080px;padding:0 120px;box-sizing:border-box;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center}
-  h1{font-size:96px;margin:0 0 60px;page-break-after:always}
-  h1:first-of-type{page-break-after:auto}
-  h2{font-size:72px;margin:0 0 40px;page-break-before:always}
-  h2:first-of-type{page-break-before:auto}
+  html,body{
+    margin:0;
+    height:100%;
+    background:#002d7e;
+    color:#fff;
+    font-family:Roboto,Helvetica,Arial,sans-serif;
+  }
+  /* каждый слайд = section, идёт до/после <hr> */
+  section{
+    width:1920px;
+    height:1080px;
+    padding:0 120px;          /* боковые поля, при желании уберите */
+    box-sizing:border-box;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;   /* центрирование по вертикали */
+    align-items:center;       /* центрирование по горизонтали */
+    text-align:center;
+  }
+  h1{font-size:96px;margin:0 0 60px}
+  h2{font-size:72px;margin:0 0 40px}
   p,li{font-size:54px;line-height:1.35;margin:12px 0}
-  ul{list-style:none;margin:0;padding:0;text-align:left}
-  li{position:relative;padding-left:1.2em}
-  li::before{content:"•";position:absolute;left:0;color:#fff;font-size:54px;line-height:1.35}
-  code{color:#002d7e;background:#fff;font-size:56px;font-family:Roboto Mono,Consolas,monospace;padding:4px 12px;border-radius:8px}
-  pre{background:#fff;color:#002d7e;font-size:42px;line-height:1.25;padding:24px 32px;border-radius:12px;overflow-x:auto;margin:24px auto;max-width:90%}
-  pre code{background:none;padding:0;font-size:inherit}
-  hr{display:none;margin:0;border:none;height:0;page-break-after:auto}
+  ul{text-align:left;margin:0;padding-left:1.2em}
+  hr{page-break-after:always;visibility:hidden}
 </style>
 
 # Презентация: Credit Analytics Widget
 
 ---
 
-## Слайд 1.
+## Слайд 1. Титульный
 
 - Credit Analytics Widget
 - Команда «Тралалело»
@@ -38,6 +48,7 @@
    - Пользователи тратят время на сбор и сверку выписок из разных банков или вообще не думают о рефинансировании
    - Отсутствует автоматическая оценка рисков и платежной нагрузки по всем кредитам, а также подсказки выгодных сценариев
    - Банки не видят контекст по клиенту и теряют возможности предложить релевантный продукт
+- Финтех-команды вынуждены строить интеграции с каждым банком вручную, что тормозит запуск
 
 ---
 
@@ -59,15 +70,18 @@
 - Точная визуализация выгоды рефинансирования с расчётом экономии по каждому сценарию
 - Автоматический подбор предложений по рефинансированию на основе продуктового каталога банка (`v1/routes/recommendations.js`)
 - Возможность объединить несколько кредитов в единую рефинансированную заявку (мультивыбор, `App.vue`)
-
+- Пакетные заявки на рефинансирование напрямую из интерфейса
 
 ---
 
 ## Слайд 5. Монетизация
+
 - __Реализовано__: аккуратное привлечение клиентов через одобренные рефинансирования. Сервис оформляет заявки (`POST /api/refinance/applications`) и передаёт банку лиды, обеспечивая совместно выгодные условия для клиента и исходного банка.
 - __Партнёрские программы__ (план): разделение комиссий за успешно закрытые рефинансирования.
 - __Freemium__ (план): базовый просмотр бесплатно, пакетные заявки и автоматические сценарии — премиум.
 - __White-label лицензирование__ (план): iframe-виджет для партнёрских финтех-сервисов.
+- __API pay-per-use__ (план): тарификация персональных офферов через API.
+
 ---
 
 ## Слайд 6. Архитектура бекенда
@@ -81,10 +95,29 @@
 ---
 
 ## Слайд 7. Архитектура: взаимодействие с основным приложением
+
 - Iframe-виджет (`frontend/credit-analytics/`) встраивается в основное клиентское приложение банка
 - Токен авторизации передаётся из родительского приложения через `postMessage`
 - Бэкенд микросервиса (`credit-analytics-backend/src/server.js`) проксирует запросы к основному Bank API и внешним банкам
+- Ответы с договорами и остатками агрегируются и возвращаются в виджет для отображения клиенту
 
+```mermaid
+flowchart LR
+    ParentApp[Основное приложение банка]
+    Widget[Credit Analytics Widget (iframe)]
+    Backend[Credit Analytics Backend (Express)]
+    BankAPI[Bank-in-a-Box API]
+    ExternalBanks[Внешние банки (OpenBanking API)]
+
+    ParentApp -->|postMessage токен| Widget
+    Widget -->|REST /api/...| Backend
+    Backend -->|Proxy| BankAPI
+    Backend -->|OAuth2 sandbox токены| ExternalBanks
+    ExternalBanks -->|Счета, договоры, остатки| Backend
+    BankAPI -->|Договоры, балансы| Backend
+    Backend -->|Агрегированные данные| Widget
+    Widget -->|UI события| ParentApp
+```
 
 ---
 
@@ -157,7 +190,7 @@
 
 ---
 
-## Слайд 16. Конец
+## Слайд 16. Call to Action
 
 - Подготовленный .env и sandbox скрипты — готовы к запуску
 - Домен: рефенансье.рф — доступен для демо и обратной связи

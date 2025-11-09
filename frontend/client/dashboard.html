@@ -304,7 +304,7 @@
         }
 
         #section-refinance {
-            --refinance-iframe-height: 750px;
+            --refinance-iframe-height: 960px;
             padding: 0;
         }
 
@@ -1284,7 +1284,10 @@
             </div>
 
             <div id="refinanceModalOverlay" class="refinance-modal__overlay hidden" aria-hidden="true">
-                <div class="refinance-modal__overlay-spinner"></div>
+                <div class="refinance-modal__overlay-content" role="status" aria-live="assertive">
+                    <div class="refinance-modal__overlay-spinner" aria-hidden="true"></div>
+                    <p>Отправляем заявку...</p>
+                </div>
             </div>
 
             <div class="refinance-modal__content" data-refinance-content>
@@ -1546,7 +1549,7 @@
         const apiBase = window.location.origin;
 
         const MOBILE_BREAKPOINT = 768;
-        const DEFAULT_DESKTOP_HEIGHT = 750;
+        const DEFAULT_DESKTOP_HEIGHT = 960;
         const MOBILE_WIDGET_MIN_HEIGHT = 720;
         const MOBILE_WIDGET_MAX_HEIGHT = 1100;
         const MOBILE_WIDGET_DEFAULT_HEIGHT = 900;
@@ -1888,24 +1891,8 @@
             }
 
             const mobile = isMobileViewport();
-            const section = document.getElementById('section-refinance');
             const requestedHeight = Math.max(parseInt(rawHeight, 10) || lastRefinanceHeight || DEFAULT_DESKTOP_HEIGHT, 320);
             let finalHeight = requestedHeight;
-
-            if (!mobile && section) {
-                const sectionStyles = getComputedStyle(section);
-                const paddingTop = parseFloat(sectionStyles.paddingTop) || 0;
-                const paddingBottom = parseFloat(sectionStyles.paddingBottom) || 0;
-                const rect = section.getBoundingClientRect();
-                const availableViewportHeight = window.innerHeight - rect.top - paddingBottom - 8;
-
-                if (!Number.isNaN(availableViewportHeight) && availableViewportHeight > 0) {
-                    const usableHeight = availableViewportHeight - paddingTop;
-                    if (usableHeight > 0) {
-                        finalHeight = Math.min(requestedHeight, Math.max(usableHeight, 320));
-                    }
-                }
-            }
 
             if (mobile) {
                 const mobileHeightSource = rawHeight
@@ -2084,6 +2071,11 @@
             }
 
             if (type === 'REFINANCE_APPLICATION_RESULT') {
+                if (payload?.status === 'submitting') {
+                    setModalSubmittingState(true);
+                    return;
+                }
+
                 setModalSubmittingState(false);
                 if (payload?.status === 'success') {
                     closeRefinanceModal({

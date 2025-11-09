@@ -1,12 +1,5 @@
 <template>
-  <div v-if="isSubmitting" class="submission-backdrop" role="status" aria-live="assertive">
-    <div class="submission-backdrop__content">
-      <div class="submission-backdrop__spinner" aria-hidden="true"></div>
-      <p class="submission-backdrop__text">Отправляем заявку...</p>
-    </div>
-  </div>
-
-  <div v-else-if="isOpen" class="modal-backdrop" @click.self="emitClose">
+  <div v-if="isOpen" class="modal-backdrop" @click.self="emitClose">
     <div class="modal">
       <header class="modal-header">
         <div>
@@ -24,71 +17,92 @@
       </div>
 
       <form v-else class="modal-form" @submit.prevent="emitSubmit">
-        <div class="modal-grid" v-if="selectedLoan">
-          <div>
-            <h4>Текущие условия</h4>
-            <ul class="modal-list">
-              <li>
-                <span class="label">Ставка</span>
-                <span class="value">{{ formatPercent(selectedLoan.currentRate) }}</span>
-              </li>
-              <li>
-                <span class="label">Ежемесячный платёж</span>
-                <span class="value">{{ formatCurrency(selectedLoan.currentMonthlyPayment) }}</span>
-              </li>
-            </ul>
+        <div
+          :class="['modal-content', { 'modal-content--hidden': isSubmitting }]"
+          :aria-hidden="isSubmitting"
+        >
+          <div class="modal-grid" v-if="selectedLoan">
+            <div>
+              <h4>Текущие условия</h4>
+              <ul class="modal-list">
+                <li>
+                  <span class="label">Ставка</span>
+                  <span class="value">{{ formatPercent(selectedLoan.currentRate) }}</span>
+                </li>
+                <li>
+                  <span class="label">Ежемесячный платёж</span>
+                  <span class="value">{{ formatCurrency(selectedLoan.currentMonthlyPayment) }}</span>
+                </li>
+              </ul>
+            </div>
+            <div v-if="selectedLoan.offer">
+              <h4>Новое предложение</h4>
+              <ul class="modal-list">
+                <li>
+                  <span class="label">Ставка</span>
+                  <span class="value">{{ formatPercent(selectedLoan.offer.suggested_rate) }}</span>
+                </li>
+                <li>
+                  <span class="label">Платёж</span>
+                  <span class="value">{{ formatCurrency(selectedLoan.offer.monthly_payment) }}</span>
+                </li>
+                <li>
+                  <span class="label">Экономия</span>
+                  <span class="value savings">{{ formatCurrency(selectedLoan.offerSavings) }}</span>
+                </li>
+              </ul>
+            </div>
           </div>
-          <div v-if="selectedLoan.offer">
-            <h4>Новое предложение</h4>
-            <ul class="modal-list">
-              <li>
-                <span class="label">Ставка</span>
-                <span class="value">{{ formatPercent(selectedLoan.offer.suggested_rate) }}</span>
-              </li>
-              <li>
-                <span class="label">Платёж</span>
-                <span class="value">{{ formatCurrency(selectedLoan.offer.monthly_payment) }}</span>
-              </li>
-              <li>
-                <span class="label">Экономия</span>
-                <span class="value savings">{{ formatCurrency(selectedLoan.offerSavings) }}</span>
-              </li>
-            </ul>
+
+          <div class="form-group">
+            <label for="desired-term" class="label">Желаемый срок (мес.)</label>
+            <input
+              id="desired-term"
+              v-model="desiredTermModel"
+              type="number"
+              min="6"
+              step="1"
+              placeholder="Например, 24"
+              :disabled="isSubmitting"
+            />
+            <span class="hint">Необязательно: если нужно изменить срок кредита.</span>
+          </div>
+
+          <div class="form-group">
+            <label for="comment" class="label">Комментарий</label>
+            <textarea
+              id="comment"
+              v-model="commentModel"
+              rows="3"
+              placeholder="Уточните пожелания или дополнительную информацию"
+              :disabled="isSubmitting"
+            ></textarea>
+          </div>
+
+          <div v-if="submissionError" class="alert alert-error">
+            {{ submissionError }}
           </div>
         </div>
 
-        <div class="form-group">
-          <label for="desired-term" class="label">Желаемый срок (мес.)</label>
-          <input
-            id="desired-term"
-            v-model="desiredTermModel"
-            type="number"
-            min="6"
-            step="1"
-            placeholder="Например, 24"
-          />
-          <span class="hint">Необязательно: если нужно изменить срок кредита.</span>
-        </div>
-
-        <div class="form-group">
-          <label for="comment" class="label">Комментарий</label>
-          <textarea
-            id="comment"
-            v-model="commentModel"
-            rows="3"
-            placeholder="Уточните пожелания или дополнительную информацию"
-          ></textarea>
-        </div>
-
-        <div v-if="submissionError" class="alert alert-error">
-          {{ submissionError }}
+        <div v-if="isSubmitting" class="modal-loading-overlay" role="status" aria-live="assertive">
+          <div class="modal-loading-overlay__content">
+            <span class="spinner spinner--xl" aria-hidden="true"></span>
+            <span>Отправляем заявку...</span>
+          </div>
         </div>
 
         <div class="modal-actions">
-          <button class="btn btn-secondary" type="button" @click="emitClose">Отмена</button>
+          <button
+            class="btn btn-secondary"
+            type="button"
+            @click="emitClose"
+            :disabled="isSubmitting"
+          >
+            Отмена
+          </button>
           <button class="btn btn-primary" type="submit" :disabled="isSubmitting">
-            <span v-if="isSubmitting" class="spinner"></span>
-            Отправить заявку
+            <span v-if="isSubmitting" class="spinner spinner--sm" aria-hidden="true"></span>
+            <span>{{ isSubmitting ? 'Отправляем…' : 'Отправить заявку' }}</span>
           </button>
         </div>
       </form>
@@ -165,6 +179,83 @@ const emitSubmit = () => emit('submit');
   align-items: center;
   justify-content: center;
   padding: 24px;
+}
+
+.modal-form {
+  position: relative;
+}
+
+.modal-content {
+  display: grid;
+  gap: 20px;
+}
+
+.modal-content--hidden {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.spinner {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(74, 91, 255, 0.25);
+  border-top-color: #4a5bff;
+  animation: spin 0.8s linear infinite;
+}
+
+.spinner--sm {
+  width: 14px;
+  height: 14px;
+  border-width: 2px;
+  margin-right: 8px;
+}
+
+.spinner--lg {
+  width: 20px;
+  height: 20px;
+  border-width: 3px;
+}
+
+.spinner--xl {
+  width: 28px;
+  height: 28px;
+  border-width: 4px;
+}
+
+.modal-actions .btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.modal-loading-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 255, 255, 0.85);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 24px;
+  z-index: 5;
+  cursor: wait;
+}
+
+.modal-loading-overlay__content {
+  display: grid;
+  gap: 12px;
+  justify-items: center;
+  color: #1f2d3d;
+  font-weight: 600;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .submission-backdrop__content {
