@@ -39,11 +39,9 @@ services:
     container_name: optifi-credit-analytics-prod
     env_file: .env
     working_dir: /app
-    command: npm run dev
-    volumes:
-      - ./microservices/credit-analytics-backend:/app
+    command: npm start
     environment:
-      NODE_ENV: development
+      NODE_ENV: production
       PORT: 8100
       BANK_API_BASE_URL: http://bank:8000
     depends_on:
