@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: optifi-db-prod
+    env_file: .env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./shared/database:/docker-entrypoint-initdb.d
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+    networks:
+      - optifi-network
+
+  bank:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: optifi-api-prod
+    env_file: .env
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - optifi-network
+    expose:
+      - "8000"
+
+  credit-analytics:
+    build:
+      context: ./microservices/credit-analytics-backend
+      dockerfile: Dockerfile
+    container_name: optifi-credit-analytics-prod
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: 8100
+      BANK_API_BASE_URL: http://bank:8000
+    depends_on:
+      - bank
+    restart: unless-stopped
+    networks:
+      - optifi-network
+    expose:
+      - "8100"
+
+volumes:
+  postgres_data:
+
+networks:
+  optifi-network:
+    driver: bridge
