@@ -34,6 +34,8 @@ services:
       BANK_CODE: ${BANK_CODE:-mybank}
       BANK_NAME: ${BANK_NAME:-My Awesome Bank}
       BANK_DESCRIPTION: ${BANK_DESCRIPTION:-Custom bank}
+      TEAM_CLIENT_ID: ${TEAM_CLIENT_ID:-team200}
+      TEAM_CLIENT_SECRET: ${TEAM_CLIENT_SECRET:-your_secret_key_here}
       DATABASE_URL: postgresql://${POSTGRES_USER:-bankuser}:${POSTGRES_PASSWORD:-bankpass}@db:5432/${POSTGRES_DB:-mybank_db}
       SECRET_KEY: ${SECRET_KEY:-your-secret-key-change-in-production}
       ALGORITHM: ${ALGORITHM:-HS256}

@@ -45,26 +45,6 @@ services:
     ports:
       - "8000:8000"
 
-  credit-analytics:
-    build:
-      context: ./microservices/credit-analytics-backend
-      dockerfile: Dockerfile
-    container_name: optifi-credit-analytics-prod
-    env_file: .env
-    working_dir: /app
-    command: npm start
-    environment:
-      NODE_ENV: production
-      PORT: 8100
-      BANK_API_BASE_URL: http://bank:8000
-    depends_on:
-      - bank
-    restart: unless-stopped
-    networks:
-      - optifi-network
-    expose:
-      - "8100"
-
 volumes:
   postgres_data:
 
