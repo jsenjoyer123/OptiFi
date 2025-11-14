@@ -1541,12 +1541,13 @@
         }
         
         const bankNames = {
+            'self': 'OptiFi Bank',
             'vbank': 'Virtual Bank',
             'abank': 'Awesome Bank',
             'sbank': 'Smart Bank'
         };
         
-        const apiBase = window.location.origin;
+        const apiBase = `${window.location.origin}/bank-api`;
 
         const MOBILE_BREAKPOINT = 768;
         const DEFAULT_DESKTOP_HEIGHT = 960;
