@@ -1,0 +1,20 @@
+.git
+.gitignore
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.env
+
+# Certificates (local only)
+deploy/certs/
+
+# Node.js artifacts and microservices
+node_modules
+**/node_modules
+microservices/
+
+# IDE & misc
+.vscode/
+.idea/
+*.log
