@@ -2010,7 +2010,8 @@
 
                 const widgetUrl = new URL('/', window.location.origin);
                 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-                if (isLocalhost) {
+                const isHttps = window.location.protocol === 'https:';
+                if (!isHttps && isLocalhost) {
                     widgetUrl.port = '5174';
                 } else {
                     widgetUrl.pathname = '/dev-widget/';
@@ -2020,7 +2021,8 @@
             } else {
                 const widgetUrl = new URL('/', window.location.origin);
                 const isLocalhost = ['localhost', '127.0.0.1'].includes(window.location.hostname);
-                if (isLocalhost) {
+                const isHttps = window.location.protocol === 'https:';
+                if (!isHttps && isLocalhost) {
                     widgetUrl.port = '5174';
                 } else {
                     widgetUrl.pathname = '/dev-widget/';
