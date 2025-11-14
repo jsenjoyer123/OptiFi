@@ -23,14 +23,25 @@ services:
       dockerfile: Dockerfile
     container_name: optifi-api-prod
     env_file: .env
+    environment:
+      BANK_CODE: ${BANK_CODE:-optifi}
+      BANK_NAME: ${BANK_NAME:-OptiFi Credit Analytics}
+      BANK_DESCRIPTION: ${BANK_DESCRIPTION:-Multi-bank credit analytics and refinancing platform}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-optifi_user}:${POSTGRES_PASSWORD:-CHANGE_THIS_STRONG_PASSWORD_HERE}@db:5432/${POSTGRES_DB:-optifi_prod}
+      SECRET_KEY: ${SECRET_KEY:-CHANGE_THIS_VERY_LONG_SECRET_KEY_HERE_MIN_32_CHARS}
+      ALGORITHM: ${ALGORITHM:-HS256}
+      ACCESS_TOKEN_EXPIRE_MINUTES: ${ACCESS_TOKEN_EXPIRE_MINUTES:-1440}
+      API_VERSION: ${API_VERSION:-2.1}
+      REGISTRY_URL: ${REGISTRY_URL:-https://рефенансье.рф}
+      PUBLIC_URL: ${PUBLIC_URL:-https://рефенансье.рф}
     depends_on:
       db:
         condition: service_healthy
     restart: unless-stopped
     networks:
       - optifi-network
-    expose:
-      - "8000"
+    ports:
+      - "8000:8000"
 
   credit-analytics:
     build:
