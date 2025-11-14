@@ -199,6 +199,7 @@ const isMobile = ref(false);
 let trackScrollHandler = null;
 const TOKEN_STORAGE_KEY = 'creditAnalyticsToken';
 const AGREEMENT_ACCEPTED_KEY = 'creditAnalyticsAgreementAccepted';
+const SHOW_EXTERNAL_BANKS_ISSUES = false;
 
 const sendToParent = (type, payload) => {
   if (typeof window === 'undefined') {
@@ -963,6 +964,9 @@ const externalBanksDown = computed(() => {
 });
 
 const externalIssues = computed(() => {
+  if (!SHOW_EXTERNAL_BANKS_ISSUES) {
+    return null;
+  }
   if (state.errorStatus) {
     return state.errorStatus;
   }
