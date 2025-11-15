@@ -1,37 +1,66 @@
 export const getMockLoanDetails = () => [
   {
-    id: 'mock-loan-1',
+    // Внутренний потребкредит банка под 13.5% с остатком долга
+    id: 'mock-loan-internal-1',
+    agreement_id: 'mock-loan-internal-1',
     source: 'internal',
     product_type: 'loan',
-    principal_amount: 350000,
+    amount: 450000,
     currency: 'RUB',
-    interest_rate: 12.5,
-    remaining_term_months: 36,
+    interest_rate: 13.5,
+    term_months: 40,
+    remaining_term_months: 40,
     origin_bank: 'self',
     account_number: '40817810099910004312',
+    balance: [
+      {
+        amount: 450000,
+        currency: 'RUB',
+      },
+    ],
   },
   {
-    id: 'mock-loan-2',
+    // Внешний кредит другого банка под 9.2% (например, ипотека)
+    id: 'mock-loan-external-1',
+    agreement_id: 'mock-loan-external-1',
     source: 'external',
-    product_type: 'mortgage',
-    principal_amount: 1200000,
+    product_type: 'loan',
+    amount: 900000,
     currency: 'RUB',
     interest_rate: 9.2,
-    remaining_term_months: 204,
+    term_months: 96,
+    remaining_term_months: 96,
     origin_bank: 'vbank',
+    account_number: '40817810099910001234',
+    balance: [
+      {
+        amount: 900000,
+        currency: 'RUB',
+      },
+    ],
   },
 ];
 
 export const getMockBankProducts = () => [
   {
+    id: 'mock-refi-9',
+    bank_code: 'self',
+    name: 'Вау кредит под 9% (мок)',
+    min_rate: 9,
+    max_rate: 9,
+    term_months: { min: 12, max: 60 },
+    max_amount: 1500000,
+    processing_fee: 0,
+  },
+  {
     id: 'mock-refi-1',
     bank_code: 'vbank',
-    name: 'VBank Refinancing 9%',
-    min_rate: 9,
+    name: 'VBank Refinancing 9.5%',
+    min_rate: 9.5,
     max_rate: 11,
-    term_months: { min: 12, max: 60 },
+    term_months: { min: 12, max: 84 },
     max_amount: 2000000,
-    processing_fee: 0,
+    processing_fee: 0.5,
   },
   {
     id: 'mock-refi-2',
