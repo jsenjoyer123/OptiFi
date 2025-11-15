@@ -1,0 +1,4 @@
+# Ignore actual SSL key/certificate material
+*
+!.gitignore
+!README.md

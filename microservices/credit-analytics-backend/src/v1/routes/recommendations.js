@@ -61,25 +61,47 @@ const getRemainingMonths = (loan, product) => {
 };
 
 const normalizeProduct = (product) => {
-  const productId = product.productId || product.product_id;
-  const productType = (product.productType || product.product_type || '').toLowerCase();
+  const productId = product.productId || product.product_id || product.id;
 
-  if (!productId || productType !== 'loan') {
+  const rawType = product.productType || product.product_type || product.type;
+  const inferredType = rawType
+    || (product.min_rate != null || product.max_rate != null || product.term_months ? 'loan' : '');
+  const productType = (inferredType || '').toLowerCase();
+
+  if (!productId || (productType && productType !== 'loan')) {
     return null;
   }
 
-  const interestRate = toNumber(product.interestRate ?? product.interest_rate);
+  let interestRate = toNumber(product.interestRate ?? product.interest_rate, null);
+  if (!Number.isFinite(interestRate)) {
+    const minRate = toNumber(product.min_rate, null);
+    const maxRate = toNumber(product.max_rate, null);
+
+    if (Number.isFinite(minRate)) {
+      interestRate = minRate;
+    } else if (Number.isFinite(maxRate)) {
+      interestRate = maxRate;
+    }
+  }
+
   if (!Number.isFinite(interestRate)) {
     return null;
+  }
+
+  let termMonths = toNumber(product.termMonths ?? product.term_months, null);
+  if (!Number.isFinite(termMonths) && product.term_months && typeof product.term_months === 'object') {
+    const maxTerm = toNumber(product.term_months.max, null);
+    const minTerm = toNumber(product.term_months.min, null);
+    termMonths = Number.isFinite(maxTerm) ? maxTerm : minTerm;
   }
 
   return {
     productId,
     productName: product.productName || product.name || 'Кредитное предложение банка',
     interestRate,
-    minAmount: toNumber(product.minAmount ?? product.min_amount),
-    maxAmount: toNumber(product.maxAmount ?? product.max_amount),
-    termMonths: toNumber(product.termMonths ?? product.term_months),
+    minAmount: toNumber(product.minAmount ?? product.min_amount, null),
+    maxAmount: toNumber(product.maxAmount ?? product.max_amount, null),
+    termMonths: Number.isFinite(termMonths) ? termMonths : null,
   };
 };
 
@@ -108,7 +130,12 @@ const buildOffer = (loan, product) => {
   }
 
   const originalRate = toNumber(loan.interest_rate, null);
-  const rateToUse = product?.interestRate ?? Math.max(originalRate ? originalRate - 3 : DEFAULT_FALLBACK_RATE + 3, DEFAULT_FALLBACK_RATE);
+  // Используем только реальную ставку из продуктового каталога.
+  // Если подходящего продукта нет, предложение не формируем.
+  const rateToUse = toNumber(product?.interestRate, null);
+  if (!Number.isFinite(rateToUse)) {
+    return null;
+  }
   const remainingMonths = getRemainingMonths(loan, product);
   const monthlyPayment = calculateMonthlyPayment(principal, rateToUse, remainingMonths);
 
@@ -192,13 +219,58 @@ const fetchExternalBanks = async () => {
   return config.externalBanks;
 };
 
+// В мок-режиме используем реальные продукты из кабинета банкира
+// эндпоинт /banker/products основного API
+const fetchBankerProductsOnce = async () => {
+  const baseUrl = config.bankApiBaseUrl || config.localProductCatalogBaseUrl;
+  if (!baseUrl) {
+    return [];
+  }
+
+  const trimmedBase = baseUrl.replace(/\/$/, '');
+  const bankerUrl = `${trimmedBase}/banker/products`;
+
+  try {
+    const response = await axios.get(bankerUrl, {
+      headers: {
+        Accept: 'application/json',
+      },
+    });
+
+    const rawProducts = Array.isArray(response.data?.products)
+      ? response.data.products
+      : [];
+
+    const normalized = rawProducts.map((product) => normalizeProduct(product)).filter(Boolean);
+
+    if (normalized.length) {
+      return normalized;
+    }
+
+    const mockProducts = getMockBankProducts().map((product) => normalizeProduct(product)).filter(Boolean);
+    return mockProducts;
+  } catch (error) {
+    // eslint-disable-next-line no-console
+    console.warn('[refinance] failed to load banker products (mock mode)', {
+      baseUrl,
+      url: bankerUrl,
+      message: error?.message,
+      status: error?.response?.status,
+    });
+    return [];
+  }
+};
+
 const fetchProductsFromSource = async (baseUrl) => {
   if (!baseUrl) {
     return [];
   }
 
-  const catalogUrl = `${baseUrl.replace(/\/$/, '')}/products`;
+  const trimmedBase = baseUrl.replace(/\/$/, '');
+  const products = [];
 
+  // Try OpenBanking Products API (/products), like client dashboard
+  const catalogUrl = `${trimmedBase}/products`;
   try {
     const response = await axios.get(catalogUrl, {
       headers: {
@@ -210,7 +282,7 @@ const fetchProductsFromSource = async (baseUrl) => {
       ? response.data.data.product
       : [];
 
-    return rawProducts.map((product) => normalizeProduct(product)).filter(Boolean);
+    products.push(...rawProducts);
   } catch (error) {
     // eslint-disable-next-line no-console
     console.warn('[refinance] failed to load loan products from source', {
@@ -219,8 +291,39 @@ const fetchProductsFromSource = async (baseUrl) => {
       message: error?.message,
       status: error?.response?.status,
     });
-    return [];
   }
+
+  // Fallback: use internal banker products if OpenBanking catalog is not available
+  if (!products.length) {
+    const bankerUrl = `${trimmedBase}/banker/products`;
+    try {
+      const response = await axios.get(bankerUrl, {
+        headers: {
+          Accept: 'application/json',
+        },
+      });
+
+      const rawProducts = Array.isArray(response.data?.products)
+        ? response.data.products
+        : [];
+
+      products.push(...rawProducts);
+    } catch (error) {
+      // eslint-disable-next-line no-console
+      console.warn('[refinance] failed to load banker products from source', {
+        baseUrl,
+        url: bankerUrl,
+        message: error?.message,
+        status: error?.response?.status,
+      });
+    }
+  }
+
+  if (!products.length) {
+    return getMockBankProducts().map((product) => normalizeProduct(product)).filter(Boolean);
+  }
+
+  return products.map((product) => normalizeProduct(product)).filter(Boolean);
 };
 
 const expandSourceVariants = (source) => {
@@ -283,7 +386,7 @@ const fetchLocalLoanProducts = async () => {
     return Array.from(productsById.values());
   }
 
-  return getMockBankProducts();
+  return getMockBankProducts().map((product) => normalizeProduct(product)).filter(Boolean);
 };
 
 const normalizeBankHealth = (bank, result) => {
@@ -340,7 +443,7 @@ router.get('/suggestions', async (req, res) => {
   try {
     if (config.useMockData) {
       const mockLoans = getMockLoanDetails();
-      const bankProducts = await fetchLocalLoanProducts();
+      const bankProducts = await fetchBankerProductsOnce();
       const enrichedMockLoans = enrichLoansWithOffers(mockLoans, bankProducts);
 
       res.json({
