@@ -171,8 +171,8 @@
         </div>
     </main>
 
+    <script src="../client/theme-switcher.js"></script>
     <script type="module">
-        import { applyTheme, toggleTheme } from '../client/theme-switcher.js';
         import { initSidebar, sidebarStyles } from './sidebar.js';
 
         // Apply styles
@@ -182,11 +182,15 @@
         initSidebar('consents');
         
         // Apply theme
-        applyTheme();
+        if (window.applyTheme) {
+            window.applyTheme();
+        }
 
         // Setup theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
+            if (window.toggleTheme) {
+                window.toggleTheme();
+            }
             const isDark = localStorage.getItem('theme') === 'dark';
             document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
         });

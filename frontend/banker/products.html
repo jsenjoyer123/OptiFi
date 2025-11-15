@@ -338,7 +338,6 @@
                         <span>Продукт активен</span>
                     </label>
                 </div>
-
                 <div class="modal-actions">
                     <button type="button" class="btn btn-secondary" onclick="closeCreateModal()">Отмена</button>
                     <button type="submit" class="btn btn-primary">Создать</button>
@@ -347,8 +346,8 @@
         </div>
     </div>
 
+    <script src="../client/theme-switcher.js"></script>
     <script type="module">
-        import { applyTheme, toggleTheme } from '../client/theme-switcher.js';
         import { initSidebar, sidebarStyles } from './sidebar.js';
 
         // Apply styles
@@ -358,16 +357,31 @@
         initSidebar('products');
         
         // Apply theme
-        applyTheme();
+        if (window.applyTheme) {
+            window.applyTheme();
+        }
 
         // Setup theme toggle
         document.getElementById('themeToggle').addEventListener('click', () => {
-            toggleTheme();
+            if (window.toggleTheme) {
+                window.toggleTheme();
+            }
             const isDark = localStorage.getItem('theme') === 'dark';
             document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
         });
+    </script>
 
-        // Delete product helpers
+    <script>
+        let token = localStorage.getItem('banker_token');
+        if (!token) {
+            window.location.href = 'index.html';
+        }
+
+        function getBaseUrl() {
+            const port = window.location.port;
+            return `http://localhost:${port}`;
+        }
+
         let deleteModal;
         let deleteProductId = null;
 
@@ -445,23 +459,6 @@
             } catch (error) {
                 alert('Ошибка: ' + error.message);
             }
-        }
-
-        // Update theme icon on load
-        const isDark = localStorage.getItem('theme') === 'dark';
-        document.getElementById('themeIcon').textContent = isDark ? '☀️' : '🌙';
-    </script>
-
-    <script>
-        // Check authentication
-        const token = localStorage.getItem('banker_token');
-        if (!token) {
-            window.location.href = 'index.html';
-        }
-
-        function getBaseUrl() {
-            const port = window.location.port;
-            return `http://localhost:${port}`;
         }
 
         // Load products
